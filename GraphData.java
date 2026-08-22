@@ -1,5 +1,8 @@
-import java.util.ArrayList;
+//Weiran Huang
 //this part is used to graph the mositure change of the plant
+
+import java.util.ArrayList;
+
 public class GraphData {
     private ArrayList<Double> time = new ArrayList<>();
     private ArrayList<Double> VoltageData = new ArrayList<>();
