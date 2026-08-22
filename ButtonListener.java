@@ -1,5 +1,8 @@
 //Weiran Huang
-// this file is used to check the Emergency button
+// this file is used to check the Emergency button is pressed or not
+// if yea, if will print the message let user know
+// everytime when the system stop, the oled board will show you the reason
+
 import org.firmata4j.IODeviceEventListener;
 import org.firmata4j.IOEvent;
 import org.firmata4j.Pin;
