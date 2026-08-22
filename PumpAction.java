@@ -1,4 +1,5 @@
-//this part is to make sure the pump work
+//Weiran Huang
+// this part is to make sure the pump work
 // and count how much water is used
 
 import org.firmata4j.Pin;
