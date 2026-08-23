@@ -38,7 +38,7 @@ This project solves a common problem of forgetting to water plants by automating
 The system runs on a **periodic TimerTask** (every 10 seconds) and follows strict state transitions:
 
 1. **Read Stage**: Reads analog values from the soil moisture sensor and temperature sensor.
-2. **Calibration**: Converts raw ADC (0-1023) to Voltage using the formula derived from multimeter testing:  
+2. **Calibration**: Converts raw sensor value (0-1023) to Voltage using the formula derived from multimeter testing:  
    **`V_out = 0.005 * (Sensor_Value) + 0.05`**
 3. **Decision Logic**:
    - **If Soil = DRY**:
@@ -46,7 +46,7 @@ The system runs on a **periodic TimerTask** (every 10 seconds) and follows stric
      - Else → **Short Watering**.
    - **If Soil = WET** → Pump remains **OFF**.
 4. **Safety Cut-off**: Stops automatically when total water usage reaches the 2L limit (prevents flooding).
-5. **Emergency Override**: Pressing the physical button triggers the `IODeviceEventListener`, immediately halting all operations (`STOP` state).
+5. **Emergency Override**: Pressing the physical button triggers the `IODeviceEventListener`, immediately stop all operations (`STOP` state).
 
 ---
 
@@ -59,24 +59,47 @@ To ensure accuracy, I measured the sensor output using a multimeter at different
 | **Moderately Wet** | 605 | 3.05 V |
 | **Really Wet** | 527 | 2.65 V |
 
+> Each value above represents the average of three measurements taken under each state.
+> 
 > **Regression Formula derived**: `y = 0.005x + 0.05` (where x = raw sensor value, y = voltage).
 
 ---
 
 ## 🐞 Major Bug Fix (Debugging Story)
-**Problem**: During testing, the system continued watering even after the 2L water reservoir was depleted.
+**🐞 Problem 1**: During testing, the system continued turning on the pump even after the 2L water reservoir was used up.
 
 **Investigation**: Used `print` statements to trace execution. Discovered that while the water count was updated inside the `PumpAction` class, the new value was **not being returned** to the main controller class.
 
-**Solution**: Refactored the class to include a getter method that returns the updated water usage value to the main loop, ensuring the system halts correctly when the limit is reached.
+**Solution**: Refactored the class to include a getter method that returns the updated water usage value to the main class, ensuring the system stops correctly when the limit is reached.
+<br>
+<br>
+<br>
+**🐞 Problem 2**: During testing, when the system got the mositure value and tried to plot it on the graph, only a single data point would appear. 
+
+**Investigation**: I checked how the graph looked by letting the system run for different lengths of time. It turned out that the graph's domain was the issue. If the domain was set too large, it was hard to see any changes because the system reads data every 10 seconds, causing all the data to squish together.
+
+**Solution**: Refactored the class, let a variable store the size of the graph's domain,  to let the graph's domain automatically adjust based on the amount of data collected.
 
 ---
 
 ## 📂 Project Structure (OOP Design)
-- **`CheckSoilCondition`**: Handles sensor calibration and state determination.
-- **`PumpAction`**: Controls the relay logic and tracks water usage limits.
-- **`GraphData`**: Manages `ArrayLists` to store time/voltage pairs and renders the live graph.
-- **Event-Driven**: Implements `IODeviceEventListener` for the emergency button and extends `TimerTask` for periodic sampling.
+- **`Mainrun`**: The **Application Entry Point**. Establishes the Firmata4j connection, verifies Arduino connectivity, initializes all components, and schedules the periodic execution of `KeyTask`.
+
+- **`KeyTask`**: The **Central Controller (Orchestrator)** (extends `TimerTask`). Executed periodically, it organizes the main workflow: reads raw analog data, converts the data to voltage (via calibration formula), evaluates the soil state via `CheckSoilCondition`, and coordinates downstream actions including `PumpAction`, `OLEDdisplay`, and `GraphData`.
+
+- **`CheckSoilCondition`**: Handles the core **Decision Logic**. Compares voltage value against defined thresholds, and determines the current soil state (Dry / Wet).
+
+- **`PumpAction`**: Controls the relay switch for the water pump and tracks cumulative water usage. Stop watering automatically when the 2L safety limit is reached.
+
+- **`OLEDdisplay`**: Manages the I2C communication with the OLED screen to display real-time feedback (voltage, temperature, soil status, and pump state) to the user.
+
+- **`GraphData`**: Manages `ArrayLists` to store time-stamped voltage readings and renders the live trend chart on the PC using `StdDraw`.
+
+- **`ButtonListener`**: Implements `IODeviceEventListener` to detect physical emergency button presses via hardware interrupts.
+
+- **`Emergency`**: Encapsulates the Emergency Stop state. Once triggered by `ButtonListener`, it immediately signals the `KeyTask` controller to stop all operations and safely shut down the pump.
+
+- **Event-Driven Architecture**: The system used `TimerTask` for periodic polling and `IODeviceEventListener` for asynchronous hardware interrupt handling, ensuring a responsive and reliable state-machine design.
 
 ---
 
@@ -89,14 +112,17 @@ To ensure accuracy, I measured the sensor output using a multimeter at different
 ---
 
 ## 🚩 How to Run (Quick Setup)
-1. Flash the standard Firmata firmware to the Arduino Uno via Arduino IDE.
-2. Connect sensors and pump according to the schematic (see wiring diagram in repo).
-3. Run the Java Main class (ensure Firmata4j and StdDraw libraries are in classpath).
-4. Monitor the OLED screen or the PC console for real-time data.
+1. Connect Arduino board to your computer.
+2. Flash the standard Firmata firmware to the Arduino Uno via Arduino IDE.
+3. Connect sensors and pump according to the schematic (see wiring diagram in the first picture).
+4. Place the pump inside water, place the moisture sensor inside the soil, place the temperature sensor near the plant.
+5. Run the Java Main class (ensure Firmata4j and StdDraw libraries are in classpath).
+6. Monitor the OLED screen or the PC console for real-time data.
 
 ---
 
 ## 💭 Future Improvements
+- Break keyTask class into a few classes to match Single Responsibility Principle.
 - Add WiFi/Bluetooth module to push data to a mobile app (IoT cloud).
 - Implement a PID controller for precise moisture level maintenance.
 - Use a database (SQLite) to store long-term historical trends.
