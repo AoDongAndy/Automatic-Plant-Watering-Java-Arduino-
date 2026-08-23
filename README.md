@@ -1,12 +1,17 @@
 # 🌱 Automatic-Plant-Watering(IoT & Embedded Control)
 # Project Goal
 > **An event-driven state machine built with Java (Firmata4j) and Arduino that waters plants based on real-time soil moisture and surrounding temperature.**
-<div align="center">
-<img width="600" alt="Pump in water supply (2)" src="https://github.com/user-attachments/assets/320267d9-74b0-4ba6-86fd-a03a46599ca2" />
-</div>
 
-##Overview
+<img width="705" height="733" alt="statemachine" src="https://github.com/user-attachments/assets/77cf9da1-2d91-4130-9df2-37fe002306af" />
 <br>
+
+<img width="600" alt="Pump in water supply (2)" src="https://github.com/user-attachments/assets/320267d9-74b0-4ba6-86fd-a03a46599ca2" />
+
+
+
+
+## Overview
+
 This project solves a common problem of forgetting to water plants by automating the process. Unlike simple moisture triggers, it will check the temperature then adjust the amount of water provide to the plant. If the temperature is high (>25°C), the watering duration increases to prevent underwatering.
 <br>
  - **Real-time Feedback**: OLED screen displays sensor voltage, temperature, soil status, and pump state.
@@ -14,7 +19,7 @@ This project solves a common problem of forgetting to water plants by automating
    <img width="600"  alt="image" src="https://github.com/user-attachments/assets/53954d12-b42d-45c3-ace1-1ea7ad3ed64a" />
  - **Data Logging & Visualization**: Stores time-series data (Voltage vs. Time) in `ArrayLists` and plots live graphs using `StdDraw` on the PC.
      
-      <img width="400" alt="image" src="https://github.com/user-attachments/assets/f6d3321d-47fa-4399-98b4-40f6fc9b95a2" />
+    <img width="400" alt="image" src="https://github.com/user-attachments/assets/f6d3321d-47fa-4399-98b4-40f6fc9b95a2" />
 
  - **Fail-Safe Mechanism**: An emergency physical button instantly forces the system into a `STOP` state.
 
@@ -35,7 +40,7 @@ This project solves a common problem of forgetting to water plants by automating
 
 ## ⚙️ How It Works (State Machine Logic)
 
-The system runs on a **periodic TimerTask** (every 10 seconds) and follows strict state transitions:
+The system runs on a **periodic TimerTask** (every 60 seconds) and follows strict state transitions:
 
 1. **Read Stage**: Reads analog values from the soil moisture sensor and temperature sensor.
 2. **Calibration**: Converts raw sensor value (0-1023) to Voltage using the formula derived from multimeter testing:  
@@ -76,7 +81,7 @@ To ensure accuracy, I measured the sensor output using a multimeter at different
 <br>
 **🐞 Problem 2**: During testing, when the system got the mositure value and tried to plot it on the graph, only a single data point would appear. 
 
-**Investigation**: I checked how the graph looked by letting the system run for different lengths of time. It turned out that the graph's domain was the issue. If the domain was set too large, it was hard to see any changes because the system reads data every 10 seconds, causing all the data to squish together.
+**Investigation**: I checked how the graph looked by letting the system run for different lengths of time. It turned out that the graph's domain was the issue. If the domain was set too large, it was hard to see any changes because the system reads data every 60 seconds, causing all the data to squish together.
 
 **Solution**: Refactored the class, let a variable store the size of the graph's domain,  to let the graph's domain automatically adjust based on the amount of data collected.
 
