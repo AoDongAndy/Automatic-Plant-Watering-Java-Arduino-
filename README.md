@@ -1,4 +1,4 @@
-# 🌱 Automatic-Plant-Watering(IoT & Embedded Control)
+# 🌱 Automatic-Plant-Watering(Embedded Control)
 # Project Goal
 > **An event-driven state machine built with Java (Firmata4j) and Arduino that waters plants based on real-time soil moisture and surrounding temperature.**
 
